@@ -1,0 +1,27 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "PDF to MP3",
+            "type": "shell",
+            "command": "rm -rf .venv && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && python3 ${workspaceFolder}/pdf_to_mp3.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "none",
+                "isDefault": true
+            },
+        },
+        {
+            "label": "PDF to MP3 website",
+            "type": "shell",
+            "command": "rm -rf .venv && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && python3 ${workspaceFolder}/main.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "none",
+                "isDefault": true
+            },
+        },
+    ]
+}
