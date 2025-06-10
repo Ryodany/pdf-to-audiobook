@@ -4,9 +4,19 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Configure",
+            "type": "shell",
+            "command": "rm -rf .venv && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt",
+            "problemMatcher": [],
+            "group": {
+                "kind": "none",
+                "isDefault": true
+            },
+        },
+        {
             "label": "PDF to MP3",
             "type": "shell",
-            "command": "rm -rf .venv && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && python3 ${workspaceFolder}/pdf_to_mp3.py",
+            "command": "python3 ${workspaceFolder}/pdf_to_mp3.py",
             "problemMatcher": [],
             "group": {
                 "kind": "none",
@@ -16,7 +26,7 @@
         {
             "label": "PDF to MP3 website",
             "type": "shell",
-            "command": "rm -rf .venv && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && python3 ${workspaceFolder}/main.py",
+            "command": "python3 ${workspaceFolder}/main.py",
             "problemMatcher": [],
             "group": {
                 "kind": "none",
