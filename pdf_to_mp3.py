@@ -14,7 +14,7 @@ from pydub import AudioSegment
 import nltk
 nltk.download("punkt_tab")
 
-DEFAULT_SPEAKER = "speakers/spanish_male.wav"
+DEFAULT_SPEAKER = "speakers/sara_martin_eleven_labs.wav"
 
 def create_wav_folder():
     current_dir = os.getcwd()
