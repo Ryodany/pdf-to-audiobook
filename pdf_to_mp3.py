@@ -38,7 +38,7 @@ def create_pdf_folder():
         os.makedirs(pdf_folder_path)
 
 def get_pdf_files():
-    pdf_files = glob.glob('pdf/*.pdf')
+    pdf_files = sorted(glob.glob('pdf/*.pdf'))
 
     if len(pdf_files) == 0:
         print('No pdf files to convert')
