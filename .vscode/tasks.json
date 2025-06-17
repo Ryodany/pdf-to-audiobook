@@ -16,7 +16,7 @@
         {
             "label": "PDF to MP3",
             "type": "shell",
-            "command": "python3 ${workspaceFolder}/pdf_to_mp3.py",
+            "command": "python3 ${workspaceFolder}/pdf_to_mp3.py -d pdf/",
             "problemMatcher": [],
             "group": {
                 "kind": "none",

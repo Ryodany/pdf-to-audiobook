@@ -1,6 +1,9 @@
 import os
 import os.path
 import glob
+import sys
+
+import getopt
 
 import PyPDF2
 
@@ -37,36 +40,19 @@ def create_pdf_folder():
     if not os.path.exists(pdf_folder_path):
         os.makedirs(pdf_folder_path)
 
-def get_pdf_files():
-    pdf_files = sorted(glob.glob('pdf/*.pdf'))
+def get_pdf_files(dir: str):
+    pdf_files = sorted(glob.glob(os.path.join(dir, "*.pdf")))
 
     if len(pdf_files) == 0:
-        print('No pdf files to convert')
+        print(f"No pdf files found in {dir}")
         return None
 
-    print('List of PDF files:')
+    print("List of pdf files:")
     for index, file_path in enumerate(pdf_files):
         file_name = os.path.basename(file_path)
-        print(f'{index + 1}. {file_name}')
+        print(f"{index + 1}. {file_name}")
 
     return pdf_files
-
-
-# We get the file that needs to be converted and convert it according to the selected language
-def get_pdf_file_and_convert(pdf_files):
-    # Get the number of the file to be converted
-    while True:
-        file_number = input('Enter PDF file number to convert to MP3 or enter "0" to exit: ')
-        try:
-            file_number = int(file_number)
-            if file_number == 0:
-                return None
-            if file_number < 1 or file_number > len(pdf_files):
-                print(f'The number must be from 1 to {len(pdf_files)}')
-            else:
-                return pdf_files[file_number-1]
-        except ValueError:
-            print('Enter an integer')
 
 def sentencize_with_spacy(text: str):
     import spacy
@@ -142,18 +128,7 @@ def voice_conversion(source_wav: str, speaker_wav: str, output_wav: str):
     tts = TTS(model_name=tts_model, progress_bar=False).to("cuda")
     tts.voice_conversion_to_file(source_wav=source_wav, target_wav=speaker_wav, file_path=output_wav)
 
-def pdf_to_mp3():
-    create_pdf_folder()
-
-    create_wav_folder()
-
-    create_mp3_folder()
-
-    pdf_files = get_pdf_files()
-    if pdf_files is None:
-        print("End of the program.")
-        exit()
-
+def pdf_to_mp3(pdf_files: list[str]):
     for pdf_file in pdf_files:
         with open(pdf_file, 'rb') as file:
             print(f"Extracting text from {pdf_file}...")
@@ -198,6 +173,41 @@ def pdf_to_mp3():
         print(f'{mp3_filename} successfully created')
         print()
 
+def help():
+    script_name = os.path.basename(sys.argv[0])
+    print(f"Usage: {script_name} (-f <file> | -d <dir>)")
+    print("Options:")
+    print("  -h, --help        Show this help message and exit")
+    print("  -f, --file <file> PDF file (mutually exclusive with -d)")
+    print("  -d, --dir <dir>   Directory with PDFs (mutually exclusive with -f)")
 
 if __name__ == '__main__':
-    pdf_to_mp3()
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hf:d:", ["help", "file=", "dir="])
+
+        pdf_files = []
+        pdf_folder = ""
+
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                help()
+                sys.exit()
+            elif opt in ("-f", "--file"):
+                pdf_files = [arg]
+            elif opt in ("-d", "--dir"):
+                pdf_folder = arg
+    except getopt.GetoptError as err:
+        print(f"Error: {err}")
+        help()
+        sys.exit(2)
+
+    if pdf_folder != "":
+        pdf_files = get_pdf_files(pdf_folder)
+        if pdf_files is None:
+            sys.exit(3)
+
+    create_pdf_folder()
+    create_wav_folder()
+    create_mp3_folder()
+
+    pdf_to_mp3(pdf_files)
