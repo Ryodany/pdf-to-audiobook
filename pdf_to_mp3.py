@@ -266,7 +266,6 @@ def pdf_to_mp3(pdf_files: list[str]):
                     pdf_text = reader.pages[page].extract_text()
                     current_logger.debug(f"Page {page}:")
                     current_logger.debug(pdf_text)
-                    current_logger.debug("")
 
                     text = ""
                     for index, char in enumerate(pdf_text):
@@ -284,7 +283,6 @@ def pdf_to_mp3(pdf_files: list[str]):
                         x for x in sentencize_with_nltk(text) if x != "."
                     ]
                     current_logger.debug(sentencized_text)
-                    current_logger.debug("")
 
             base_filename = os.path.splitext(os.path.basename(pdf_file))[0]
             wav_filename = f"wav/{base_filename}.wav"
@@ -302,7 +300,6 @@ def pdf_to_mp3(pdf_files: list[str]):
                 "es",
                 intermediate_wav_filename,
             )
-            current_logger.info("")
             current_logger.info(
                 f"Text to speech completed successfully, output within file {intermediate_wav_filename}"
             )
@@ -310,7 +307,6 @@ def pdf_to_mp3(pdf_files: list[str]):
             # there is no need for voice conversion, since the speaker is correctly applied in text_to_speech
             # voice_conversion(intermediate_wav_filename, DEFAULT_SPEAKER, wav_filename)
 
-            current_logger.info("")
             current_logger.info(
                 f"Converting WAV ({wav_filename}) to MP3 ({mp3_filename})..."
             )
@@ -319,7 +315,6 @@ def pdf_to_mp3(pdf_files: list[str]):
             audio.export(mp3_filename, format="mp3")
 
             current_logger.info(f"{mp3_filename} successfully created")
-            current_logger.info("")
 
             progress.update(audiobooks_task, current=pdf_filename)
 
