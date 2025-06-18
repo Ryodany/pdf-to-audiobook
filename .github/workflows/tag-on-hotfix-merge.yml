@@ -1,0 +1,42 @@
+name: Tag on Hotfix Merge
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tag_hotfix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get merged branch name
+        id: get_branch
+        run: |
+          PR_BRANCH=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls \
+            -H "Accept: application/vnd.github.groot-preview+json" \
+            | jq -r '.[0].head.ref')
+
+          echo "branch_name=$PR_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create tag if hotfix branch
+        run: |
+          BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
+          echo "Merged branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            VERSION="${BRANCH_NAME#hotfix/}"
+            TAG="v$VERSION"
+            echo "Creating tag: $TAG"
+
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
+          else
+            echo "Branch is not a hotfix/* branch. Skipping tag."
+          fi
