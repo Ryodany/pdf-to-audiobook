@@ -8,7 +8,6 @@ on:
 jobs:
   tag_release:
     runs-on: ubuntu-latest
-    if: github.event.head_commit.message contains 'Merge pull request' # Optional safeguard
 
     steps:
       - name: Checkout code
@@ -17,23 +16,27 @@ jobs:
       - name: Get merged branch name
         id: get_branch
         run: |
-          echo "GITHUB_CONTEXT:"
-          echo "${{ toJson(github) }}"
-
-          # Get the PR info using GitHub API
           PR_BRANCH=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls \
             -H "Accept: application/vnd.github.groot-preview+json" \
             | jq -r '.[0].head.ref')
 
-          echo "Merged PR branch: $PR_BRANCH"
           echo "branch_name=$PR_BRANCH" >> $GITHUB_OUTPUT
 
-      - name: Create tag
-        if: startsWith(steps.get_branch.outputs.branch_name, 'release/')
+      - name: Create tag if release branch
         run: |
-          VERSION="${{ steps.get_branch.outputs.branch_name#release/ }}"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
+          BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
+          echo "Merged branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == release/* ]]; then
+            VERSION="${BRANCH_NAME#release/}"
+            TAG="v$VERSION"
+            echo "Creating tag: $TAG"
+
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
+          else
+            echo "Branch is not a release/* branch. Skipping tag."
+          fi
