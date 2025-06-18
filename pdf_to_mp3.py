@@ -8,7 +8,18 @@ from datetime import datetime
 import getopt
 from loguru import logger
 
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, ProgressColumn, TimeRemainingColumn, TimeElapsedColumn, MofNCompleteColumn, Task, filesize
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    ProgressColumn,
+    TimeRemainingColumn,
+    TimeElapsedColumn,
+    MofNCompleteColumn,
+    Task,
+    filesize,
+)
 from rich.text import Text
 
 import PyPDF2
@@ -21,9 +32,11 @@ import soundfile as sf
 from pydub import AudioSegment
 
 import nltk
+
 nltk.download("punkt_tab")
 
 DEFAULT_SPEAKER = "speakers/sara_martin_eleven_labs.wav"
+
 
 class RateColumn(ProgressColumn):
     """Renders human readable processing rate."""
@@ -49,7 +62,10 @@ class RateColumn(ProgressColumn):
 
 def get_logging_folder():
     current_dir = os.getcwd()
-    return os.path.join(current_dir, "logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    return os.path.join(
+        current_dir, "logs", datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    )
+
 
 def create_wav_folder():
     current_dir = os.getcwd()
@@ -58,12 +74,14 @@ def create_wav_folder():
     shutil.rmtree(wav_folder_path)
     os.makedirs(wav_folder_path)
 
+
 def create_mp3_folder():
     current_dir = os.getcwd()
 
     mp3_folder_path = os.path.join(current_dir, "mp3")
     if not os.path.exists(mp3_folder_path):
         os.makedirs(mp3_folder_path)
+
 
 def create_pdf_folder():
     current_dir = os.getcwd()
@@ -72,10 +90,12 @@ def create_pdf_folder():
     if not os.path.exists(pdf_folder_path):
         os.makedirs(pdf_folder_path)
 
+
 def create_logging_folder():
     logs_folder_path = get_logging_folder()
     if not os.path.exists(logs_folder_path):
         os.makedirs(logs_folder_path)
+
 
 def create_logger(pdf_filename: str):
     log_dir = get_logging_folder()
@@ -84,10 +104,17 @@ def create_logger(pdf_filename: str):
     def pdf_filter(record):
         return record["extra"].get("pdf_name") == pdf_filename
 
-    return logger.add(log_file, format="{time} | {level} | {message}", colorize=True, filter=pdf_filter)
+    return logger.add(
+        log_file,
+        format="{time} | {level} | {message}",
+        colorize=True,
+        filter=pdf_filter,
+    )
+
 
 def get_logger(pdf_filename: str):
     return logger.bind(pdf_name=pdf_filename)
+
 
 def get_pdf_files(dir: str):
     pdf_files = sorted(glob.glob(os.path.join(dir, "*.pdf")))
@@ -103,28 +130,25 @@ def get_pdf_files(dir: str):
 
     return pdf_files
 
-def sentencize_with_spacy(text: str):
-    import spacy
-
-    #english = "en_core_web_sm"
-    spanish = "es_core_news_lg"
-    nlp = spacy.load(spanish)
-
-    sentences = []
-    for sentence in nlp(text).sents:
-        sentences += sentence
-
-    return sentences
 
 def sentencize_with_nltk(text: str):
-    tokenizer = nltk.data.load('tokenizers/punkt/spanish.pickle')
+    tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
     return tokenizer.sentences_from_text(text)
 
-def text_to_speech(progress: Progress, sentencized_text: list[str], tts_model: str, language: str | None, output_wav: str):
+
+def text_to_speech(
+    progress: Progress,
+    sentencized_text: list[str],
+    tts_model: str,
+    language: str | None,
+    output_wav: str,
+):
     model_version = tts_model.split("--")[-1]
 
     print()
-    print(f"Transforming text to speech using model {model_version} ({tts_model}) into {output_wav}...")
+    print(
+        f"Transforming text to speech using model {model_version} ({tts_model}) into {output_wav}..."
+    )
 
     home_dir = os.path.expanduser("~")
     model_path = f"{home_dir}/.local/share/tts/{tts_model}"
@@ -135,8 +159,14 @@ def text_to_speech(progress: Progress, sentencized_text: list[str], tts_model: s
     model.cuda()
 
     wav_files = []
-    text_to_speech_task = progress.add_task(description="Converting sentences into audio", current="")
-    for index, text in progress.track(enumerate(sentencized_text), task_id=text_to_speech_task, total=len(sentencized_text)):
+    text_to_speech_task = progress.add_task(
+        description="Converting sentences into audio", current=""
+    )
+    for index, text in progress.track(
+        enumerate(sentencized_text),
+        task_id=text_to_speech_task,
+        total=len(sentencized_text),
+    ):
         wav_basename = os.path.splitext(os.path.basename(output_wav))[0]
         wav_file = f"wav/wavs/{wav_basename}_{index}.wav"
         wav_files.append(wav_file)
@@ -145,9 +175,9 @@ def text_to_speech(progress: Progress, sentencized_text: list[str], tts_model: s
             text,
             config,
             speaker_wav=DEFAULT_SPEAKER,
-            #gpt_cond_len=3,
+            # gpt_cond_len=3,
             language=language,
-            )
+        )
         audio_data = outputs["wav"]
         sample_rate = 24000
         sf.write(wav_file, audio_data, sample_rate)
@@ -155,8 +185,12 @@ def text_to_speech(progress: Progress, sentencized_text: list[str], tts_model: s
     combined = AudioSegment.empty()
     silence = AudioSegment.silent(duration=500)
 
-    wav_to_mp3_task = progress.add_task(description="Converting wav into mp3", current="")
-    for wav_file in progress.track(wav_files, task_id=wav_to_mp3_task, total=len(wav_files)):
+    wav_to_mp3_task = progress.add_task(
+        description="Converting wav into mp3", current=""
+    )
+    for wav_file in progress.track(
+        wav_files, task_id=wav_to_mp3_task, total=len(wav_files)
+    ):
         wav_file_basename = os.path.splitext(os.path.basename(wav_file))[0]
         progress.update(wav_to_mp3_task, current=wav_file_basename)
 
@@ -169,32 +203,41 @@ def text_to_speech(progress: Progress, sentencized_text: list[str], tts_model: s
     for wav_file in wav_files:
         os.remove(wav_file)
 
+
 def voice_conversion(source_wav: str, speaker_wav: str, output_wav: str):
     tts_model = "voice_conversion_models/multilingual/vctk/freevc24"
     model_version = tts_model.split("/")[-1]
 
     print()
-    print(f"Converting voice using model {model_version} ({tts_model}) with speaker {speaker_wav} into {output_wav}...")
+    print(
+        f"Converting voice using model {model_version} ({tts_model}) with speaker {speaker_wav} into {output_wav}..."
+    )
 
     tts = TTS(model_name=tts_model, progress_bar=False).to("cuda")
-    tts.voice_conversion_to_file(source_wav=source_wav, target_wav=speaker_wav, file_path=output_wav)
+    tts.voice_conversion_to_file(
+        source_wav=source_wav, target_wav=speaker_wav, file_path=output_wav
+    )
+
 
 def pdf_to_mp3(pdf_files: list[str]):
     with Progress(
-                SpinnerColumn(),
-                TextColumn("[bold blue]{task.description}"),
-                TextColumn("[" \
-                "blue]{task.fields[current]}"),
-                MofNCompleteColumn(),
-                BarColumn(),
-                TextColumn("{task.percentage:>3.0f}%"),
-                RateColumn(),
-                TimeRemainingColumn(),
-                TimeElapsedColumn(),
+        SpinnerColumn(),
+        TextColumn("[bold blue]{task.description}"),
+        TextColumn("[blue]{task.fields[current]}"),
+        MofNCompleteColumn(),
+        BarColumn(),
+        TextColumn("{task.percentage:>3.0f}%"),
+        RateColumn(),
+        TimeRemainingColumn(),
+        TimeElapsedColumn(),
     ) as progress:
-        audiobooks_task = progress.add_task(description="Creating audiobooks", current="")
+        audiobooks_task = progress.add_task(
+            description="Creating audiobooks", current=""
+        )
 
-        for pdf_file in progress.track(pdf_files, task_id=audiobooks_task, total=len(pdf_files)):
+        for pdf_file in progress.track(
+            pdf_files, task_id=audiobooks_task, total=len(pdf_files)
+        ):
             pdf_filename = os.path.splitext(os.path.basename(pdf_file))[0]
             progress.update(audiobooks_task, current=pdf_filename)
 
@@ -206,8 +249,14 @@ def pdf_to_mp3(pdf_files: list[str]):
 
                 reader = PyPDF2.PdfReader(file)
                 sentencized_text = []
-                extract_sentences_task = progress.add_task(description="Extracting sentences from pages", current="")
-                for page in progress.track(range(len(reader.pages)), task_id=extract_sentences_task, total=len(reader.pages)):
+                extract_sentences_task = progress.add_task(
+                    description="Extracting sentences from pages", current=""
+                )
+                for page in progress.track(
+                    range(len(reader.pages)),
+                    task_id=extract_sentences_task,
+                    total=len(reader.pages),
+                ):
                     pdf_text = reader.pages[page].extract_text()
                     current_logger.debug(f"Page {page}:")
                     current_logger.debug(pdf_text)
@@ -215,44 +264,61 @@ def pdf_to_mp3(pdf_files: list[str]):
 
                     text = ""
                     for index, char in enumerate(pdf_text):
-                        if char == '\n' and index < len(pdf_text) - 1 and pdf_text[index + 1].isupper():
+                        if (
+                            char == "\n"
+                            and index < len(pdf_text) - 1
+                            and pdf_text[index + 1].isupper()
+                        ):
                             text += ". "
                         else:
                             text += char
                     text = text.replace("\n", "")
 
-                    sentencized_text += [x for x in sentencize_with_nltk(text) if x != "."]
+                    sentencized_text += [
+                        x for x in sentencize_with_nltk(text) if x != "."
+                    ]
                     current_logger.debug(sentencized_text)
                     current_logger.debug("")
 
             base_filename = os.path.splitext(os.path.basename(pdf_file))[0]
             wav_filename = f"wav/{base_filename}.wav"
-            #intermediate_wav_filename = f"wav/_{base_filename}.wav"
+            # intermediate_wav_filename = f"wav/_{base_filename}.wav"
             intermediate_wav_filename = wav_filename
             mp3_filename = f"mp3/{base_filename}.mp3"
 
             # Spanish model
-            #text_to_speech(progress, sentencized_text, "tts_models/es/css10/vits", None, intermediate_wav_filename)
+            # text_to_speech(progress, sentencized_text, "tts_models/es/css10/vits", None, intermediate_wav_filename)
             # multilingual model
-            text_to_speech(progress, sentencized_text, "tts_models--multilingual--multi-dataset--xtts_v2", "es", intermediate_wav_filename)
+            text_to_speech(
+                progress,
+                sentencized_text,
+                "tts_models--multilingual--multi-dataset--xtts_v2",
+                "es",
+                intermediate_wav_filename,
+            )
             current_logger.info("")
-            current_logger.info(f"Text to speech completed successfully, output within file {intermediate_wav_filename}")
+            current_logger.info(
+                f"Text to speech completed successfully, output within file {intermediate_wav_filename}"
+            )
 
             # there is no need for voice conversion, since the speaker is correctly applied in text_to_speech
-            #voice_conversion(intermediate_wav_filename, DEFAULT_SPEAKER, wav_filename)
+            # voice_conversion(intermediate_wav_filename, DEFAULT_SPEAKER, wav_filename)
 
             current_logger.info("")
-            current_logger.info(f"Converting WAV ({wav_filename}) to MP3 ({mp3_filename})...")
+            current_logger.info(
+                f"Converting WAV ({wav_filename}) to MP3 ({mp3_filename})..."
+            )
             audio = AudioSegment.from_wav(wav_filename)
             audio = audio.set_frame_rate(44100)
             audio.export(mp3_filename, format="mp3")
 
-            current_logger.info(f'{mp3_filename} successfully created')
+            current_logger.info(f"{mp3_filename} successfully created")
             current_logger.info("")
 
             progress.update(audiobooks_task, current=pdf_filename)
 
             logger.remove(current_logger_sink_id)
+
 
 def help():
     script_name = os.path.basename(sys.argv[0])
@@ -262,12 +328,14 @@ def help():
     print("  -f, --file <file> PDF file (mutually exclusive with -d)")
     print("  -d, --dir <dir>   Directory with PDFs (mutually exclusive with -f)")
 
+
 def init_logging():
     logger.remove()
 
     create_logging_folder()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:d:", ["help", "file=", "dir="])
 
