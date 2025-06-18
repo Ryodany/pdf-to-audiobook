@@ -104,15 +104,15 @@ def create_logger(pdf_filename: str):
     def pdf_filter(record):
         return record["extra"].get("pdf_name") == pdf_filename
 
-    return logger.add(
+    logger.add(
         log_file,
         format="{time} | {level} | {message}",
+        level="DEBUG",
         colorize=True,
         filter=pdf_filter,
+        enqueue=True,
     )
 
-
-def get_logger(pdf_filename: str):
     return logger.bind(pdf_name=pdf_filename)
 
 
@@ -220,6 +220,13 @@ def voice_conversion(source_wav: str, speaker_wav: str, output_wav: str):
 
 
 def pdf_to_mp3(pdf_files: list[str]):
+    loggers = {
+        os.path.splitext(os.path.basename(name))[0]: create_logger(
+            os.path.splitext(os.path.basename(name))[0]
+        )
+        for name in pdf_files
+    }
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold blue]{task.description}"),
@@ -241,8 +248,7 @@ def pdf_to_mp3(pdf_files: list[str]):
             pdf_filename = os.path.splitext(os.path.basename(pdf_file))[0]
             progress.update(audiobooks_task, current=pdf_filename)
 
-            current_logger_sink_id = create_logger(pdf_filename)
-            current_logger = get_logger(pdf_filename)
+            current_logger = loggers[pdf_filename]
 
             with open(pdf_file, "rb") as file:
                 current_logger.info(f"Extracting text from {pdf_file}...")
@@ -316,8 +322,6 @@ def pdf_to_mp3(pdf_files: list[str]):
             current_logger.info("")
 
             progress.update(audiobooks_task, current=pdf_filename)
-
-            logger.remove(current_logger_sink_id)
 
 
 def help():
