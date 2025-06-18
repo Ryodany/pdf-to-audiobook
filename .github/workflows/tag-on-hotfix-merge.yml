@@ -1,4 +1,4 @@
-name: Tag on Release Merge
+name: Tag on Hotfix Merge
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  tag_release:
+  tag_hotfix:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,13 @@ jobs:
 
           echo "branch_name=$PR_BRANCH" >> $GITHUB_OUTPUT
 
-      - name: Create tag if release branch
+      - name: Create tag if hotfix branch
         run: |
           BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
           echo "Merged branch: $BRANCH_NAME"
 
-          if [[ "$BRANCH_NAME" == release/* ]]; then
-            VERSION="${BRANCH_NAME#release/}"
+          if [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            VERSION="${BRANCH_NAME#hotfix/}"
             TAG="v$VERSION"
             echo "Creating tag: $TAG"
 
@@ -38,5 +38,5 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           else
-            echo "Branch is not a release/* branch. Skipping tag."
+            echo "Branch is not a hotfix/* branch. Skipping tag."
           fi
