@@ -14,7 +14,7 @@
             },
         },
         {
-            "label": "PDF to MP3",
+            "label": "PDF to MP3 (Directory)",
             "type": "shell",
             "command": "python3 ${workspaceFolder}/pdf_to_mp3.py -d pdf/",
             "problemMatcher": [],
@@ -24,9 +24,9 @@
             },
         },
         {
-            "label": "PDF to MP3 website",
+            "label": "PDF to MP3 (File)",
             "type": "shell",
-            "command": "python3 ${workspaceFolder}/main.py",
+            "command": "python3 ${workspaceFolder}/pdf_to_mp3.py -f pdf/file.pdf",
             "problemMatcher": [],
             "group": {
                 "kind": "none",
