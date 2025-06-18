@@ -1,1 +1,6 @@
 .venv/
+
+logs/
+*mp3*/
+*pdf*/
+*wav*/
