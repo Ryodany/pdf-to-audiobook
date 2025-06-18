@@ -13,14 +13,20 @@ jobs:
           echo "Source: ${{ github.head_ref }}"
           echo "Target: ${{ github.base_ref }}"
 
-          if [[ "${{ github.base_ref }}" == "develop" && "${{ github.head_ref }}" != feature/* ]]; then
-            echo "❌ Only feature/* branches can merge into develop"
-            exit 1
+          # Check for PRs into develop
+          if [[ "${{ github.base_ref }}" == "develop" ]]; then
+            if [[ ! "${{ github.head_ref }}" =~ ^(feature|release|hotfix)/ ]]; then
+              echo "❌ Only feature/*, release/*, and hotfix/* branches can merge into develop"
+              exit 1
+            fi
           fi
 
-          if [[ "${{ github.base_ref }}" == "main" && "${{ github.head_ref }}" != release/* ]]; then
-            echo "❌ Only release/* branches can merge into main"
-            exit 1
+          # Check for PRs into master
+          if [[ "${{ github.base_ref }}" == "master" ]]; then
+            if [[ ! "${{ github.head_ref }}" =~ ^(release|hotfix)/ ]]; then
+              echo "❌ Only release/* and hotfix/* branches can merge into master"
+              exit 1
+            fi
           fi
 
           echo "✅ Branch rules passed"
