@@ -168,7 +168,7 @@ def text_to_speech(
         total=len(sentencized_text),
     ):
         wav_basename = os.path.splitext(os.path.basename(output_wav))[0]
-        wav_file = f"wav/wavs/{wav_basename}_{index}.wav"
+        wav_file = f"wav/wavs/{wav_basename}_{index + 1}.wav"
         wav_files.append(wav_file)
 
         outputs = model.synthesize(
